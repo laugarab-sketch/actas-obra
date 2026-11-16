@@ -1,0 +1,951 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' https://accounts.google.com; style-src 'self' 'unsafe-inline' https://accounts.google.com; img-src 'self' blob: data:; connect-src 'self' https://api.anthropic.com https://www.googleapis.com https://accounts.google.com; frame-src https://accounts.google.com; media-src 'self' blob:">
+<title>Actas de obra</title>
+<meta name="theme-color" content="#1A1A18">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Actas obra">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+/* ================= Sistema de diseño (tokens de SISTEMA_DISENO_HTML: fondo #FAFAF7, dorado, oscuro) =================
+   App de campo: fuente del sistema (sin Google Fonts → funciona sin conexión), objetivos táctiles ≥ 44 px, tema claro
+   (legible a pleno sol). */
+:root{
+  --fondo:#FAFAF7; --tarjeta:#FFFFFF; --oscuro:#1A1A18; --texto:#2A2A27; --suave:#6B6A63; --linea:#E4E1D8;
+  --dorado:#8B6914; --dorado-claro:#C4952A; --dorado-fondo:#F6EFDF;
+  --verde:#2F6B3A; --verde-fondo:#E6F1E7; --rojo:#9B2C2C; --rojo-fondo:#F8E5E3; --azul:#2C5282; --azul-fondo:#E5EDF6;
+  --radio:10px; --sombra:0 1px 2px rgba(26,26,24,.06),0 2px 8px rgba(26,26,24,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fondo);color:var(--texto);
+  font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+/* Barra superior */
+#barra{position:sticky;top:0;z-index:10;background:var(--oscuro);color:#fff;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;display:flex;align-items:center;gap:10px}
+#barra .tit{flex:1;min-width:0}
+#barra h1{font-size:17px;margin:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#barra .sub{font-size:13px;color:#C9C6BC;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#barra a,#barra button{color:#fff;background:none;border:0;font-size:22px;min-width:44px;min-height:44px;
+  display:flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer}
+main{max-width:760px;margin:0 auto;padding:16px}
+h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--dorado);margin:22px 0 8px}
+/* Tarjetas */
+.tarjeta{display:block;background:var(--tarjeta);border:1px solid var(--linea);border-radius:var(--radio);
+  padding:14px;margin:0 0 10px;box-shadow:var(--sombra);color:inherit;text-decoration:none}
+a.tarjeta:active{background:var(--dorado-fondo)}
+.tarjeta b{display:block;font-size:16px}
+.meta{font-size:13px;color:var(--suave)}
+.fila{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.fila>.crece{flex:1;min-width:0}
+/* Botones */
+.btn{appearance:none;border:1px solid var(--linea);background:var(--tarjeta);color:var(--texto);border-radius:var(--radio);
+  min-height:44px;padding:10px 14px;font:inherit;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;
+  justify-content:center;gap:6px;text-decoration:none}
+.btn.primario{background:var(--oscuro);color:#fff;border-color:var(--oscuro)}
+.btn.dorado{background:var(--dorado);color:#fff;border-color:var(--dorado)}
+.btn.peligro{color:var(--rojo);border-color:#E9C9C5}
+.btn.ancho{width:100%}
+.btn.mini{min-height:36px;padding:6px 10px;font-size:14px}
+.btn:disabled{opacity:.5}
+.btn.rec{background:var(--rojo);color:#fff;border-color:var(--rojo)}
+/* Formularios */
+label.campo{display:block;margin:0 0 12px;font-size:14px;color:var(--suave)}
+label.campo input,label.campo select,textarea,select{display:block;width:100%;margin-top:4px;font:inherit;color:var(--texto);
+  background:#fff;border:1px solid var(--linea);border-radius:8px;padding:10px;min-height:44px}
+textarea{min-height:96px;resize:vertical}
+select{appearance:auto}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--dorado-claro);outline-offset:0;border-color:var(--dorado-claro)}
+/* Chips de asistentes y pendientes */
+.chip{border:1px solid var(--linea);background:#fff;border-radius:999px;padding:8px 14px;min-height:40px;font:inherit;font-size:14px;cursor:pointer}
+.chip.activo{background:var(--oscuro);color:#fff;border-color:var(--oscuro)}
+/* Fotos */
+.fotos{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.foto{position:relative;width:84px;height:84px;border-radius:8px;overflow:hidden;background:#eee}
+.foto img{width:100%;height:100%;object-fit:cover}
+.foto button{position:absolute;top:2px;right:2px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:16px}
+/* Etiquetas de estado y alertas (nombres del sistema de diseño) */
+.tag{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+.tag-green{background:var(--verde-fondo);color:var(--verde)} .tag-red{background:var(--rojo-fondo);color:var(--rojo)}
+.tag-blue{background:var(--azul-fondo);color:var(--azul)} .tag-neutral{background:#EEECE6;color:var(--suave)}
+.tag-warning{background:var(--dorado-fondo);color:var(--dorado)}
+.alert{border-radius:var(--radio);padding:12px 14px;margin:0 0 12px;font-size:14px}
+.alert-info{background:var(--azul-fondo);color:var(--azul)} .alert-warning{background:var(--dorado-fondo);color:#6B4F0E}
+.alert-danger{background:var(--rojo-fondo);color:var(--rojo)} .alert-success{background:var(--verde-fondo);color:var(--verde)}
+/* Revisión */
+.num{font-weight:700;color:var(--dorado);min-width:34px}
+details summary{cursor:pointer;color:var(--suave);font-size:13px;min-height:32px}
+.original{font-size:14px;color:var(--suave);white-space:pre-wrap;background:#F3F1EB;border-radius:8px;padding:8px;margin-top:4px}
+/* Pie fijo */
+#pie{position:fixed;left:0;right:0;bottom:0;background:rgba(250,250,247,.96);border-top:1px solid var(--linea);
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:none;gap:8px;z-index:9;backdrop-filter:blur(6px)}
+#pie.visible{display:flex}
+#pie .btn{flex:1}
+#toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--oscuro);
+  color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;
+  max-width:calc(100% - 32px);text-align:center;z-index:20}
+#toast.visible{opacity:1}
+.oculto{display:none!important}
+.vacio{text-align:center;color:var(--suave);padding:28px 8px}
+</style>
+</head>
+<body>
+<header id="barra"></header>
+<main id="app"></main>
+<div id="pie"></div>
+<div id="toast"></div>
+<!-- Entradas de foto ocultas: cámara (capture) y galería (varias) -->
+<input type="file" id="entradaCamara" accept="image/*" capture="environment" class="oculto">
+<input type="file" id="entradaGaleria" accept="image/*" multiple class="oculto">
+
+<script src="vendor/pizzip.min.js"></script>
+<script src="vendor/docxtemplater.min.js"></script>
+<script src="vendor/anthropic.js"></script>
+<script src="generar_acta.js"></script>
+<!-- Acceso con Google (OAuth). Es la única pieza que no puede ir en local: solo se usa con conexión -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+"use strict";
+/* =====================================================================================================
+   ACTAS DE OBRA — app de campo (ESPECIFICACION.md)
+   Flujo: Obras en marcha → Obra → Visita (fotos + notas dictadas) → Revisión (IA pule redacción) → .docx
+   Datos: IndexedDB local (Drive llega en el paso 4 de la demo). Ajustes (autor, clave, modelo): localStorage.
+   ===================================================================================================== */
+
+/* ---------- Constantes del acta ---------- */
+const BLOQUES = [ // orden = orden en el punto 2 del acta
+  { id: "do",   nombre: "DIRECCIÓN DE OBRA", intro: "Referentes a seguimiento y puntos singulares de la obra:" },
+  { id: "sys",  nombre: "SEGURIDAD Y SALUD", intro: "" },
+  { id: "prop", nombre: "PROPIEDAD", intro: "" },
+  { id: "inst", nombre: "INSTALACIONES", intro: "" },
+  { id: "cons", nombre: "CONSTRUCTORA", intro: "" },
+];
+const TIPOS = { asunto: "Asunto · punto 2", estado: "Estado actual · punto 1", pendiente: "Pendiente · punto 3" };
+const ASISTENTES = [["propiedad", "Propiedad"], ["do", "Director de obra"], ["constructora", "Constructor"], ["deo", "Director de ejecución"]];
+const CAMPOS_OBRA = [ // [clave, etiqueta, ejemplo, obligatorio]
+  ["titulo", "Nombre de la obra (cabecera)", "PROMOCIÓN … 14 APARTAMENTOS Y GARAJES", true],
+  ["direccion", "Dirección (cabecera)", "Calle …, Localidad"],
+  ["proyecto", "Proyecto", "PROMOCIÓN APARTAMENTOS 14 VIVIENDAS Y GARAJES"],
+  ["expediente", "Expediente", "13-02"],
+  ["emplazamiento", "Emplazamiento", "Calle … nº …, Localidad (CP) Provincia"],
+  ["propiedad", "Propiedad", ""], ["director_obra", "Director de obra", ""],
+  ["director_ejecucion", "Director de ejecución", ""], ["constructora", "Constructor", ""],
+  ["jefe_obra", "Jefe de obra", ""], ["copias", "Nº de copias", "1"],
+];
+const MODELO_DEFECTO = "claude-opus-5-5"; // intercambiable en Ajustes (nunca Fable: uso diario)
+
+/* ---------- Utilidades ---------- */
+const $ = (s) => document.querySelector(s);
+const app = $("#app");
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const hoyISO = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+const fmtFecha = (iso) => (iso ? iso.split("-").reverse().join("/") : "");
+const textoNota = (n) => (n.mejorado || n.bruto || "").trim();
+let tToast;
+function toast(msg, ms = 2600) { const t = $("#toast"); t.textContent = msg; t.classList.add("visible"); clearTimeout(tToast); tToast = setTimeout(() => t.classList.remove("visible"), ms); }
+
+/* ---------- Ajustes (por dispositivo; la clave nunca sale de este iPhone salvo hacia api.anthropic.com) ---------- */
+const CLAVE_AJUSTES = "actas-obra-ajustes";
+function ajustes() { try { return JSON.parse(localStorage.getItem(CLAVE_AJUSTES)) || {}; } catch { return {}; } }
+function guardarAjustes(a) { try { localStorage.setItem(CLAVE_AJUSTES, JSON.stringify(a)); return true; } catch { return false; } }
+
+/* ---------- IndexedDB: obras · visitas (con sus notas) · fotos (blobs) ---------- */
+let db;
+function abrirDB() {
+  return new Promise((ok, ko) => {
+    const r = indexedDB.open("actas-obra", 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      d.createObjectStore("obras", { keyPath: "id" });
+      d.createObjectStore("visitas", { keyPath: "id" }).createIndex("obraId", "obraId");
+      d.createObjectStore("fotos", { keyPath: "id" });
+    };
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => ko(r.error);
+  });
+}
+const almacen = (s, modo = "readonly") => db.transaction(s, modo).objectStore(s);
+const pedir = (r) => new Promise((ok, ko) => { r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error); });
+const dbGet = (s, id) => pedir(almacen(s).get(id));
+const dbAll = (s) => pedir(almacen(s).getAll());
+/** Guardar. En obras/visitas sella «modificada» y marca «pendiente de subir a Drive», salvo que
+ *  `marcar` sea false (datos que vienen de Drive o la propia confirmación de subida). */
+const dbPut = (s, o, marcar = true) => {
+  if (marcar && (s === "obras" || s === "visitas")) { o.modificada = Date.now(); o.driveOk = false; }
+  return pedir(almacen(s, "readwrite").put(o));
+};
+const dbDel = (s, id) => pedir(almacen(s, "readwrite").delete(id));
+const visitasDe = (obraId) => pedir(almacen("visitas").index("obraId").getAll(obraId));
+
+/* ---------- Estado de la vista actual ---------- */
+let O = null, V = null;           // obra y visita abiertas
+const urls = new Map();           // fotoId -> objectURL (miniaturas)
+let tGuardar;
+function guardarVisitaLuego() { clearTimeout(tGuardar); tGuardar = setTimeout(() => V && dbPut("visitas", V), 400); }
+async function urlFoto(id) {
+  if (!urls.has(id)) { const f = await dbGet("fotos", id); if (f) urls.set(id, URL.createObjectURL(f.blob)); }
+  return urls.get(id) || "";
+}
+function liberarUrls() { urls.forEach((u) => URL.revokeObjectURL(u)); urls.clear(); }
+
+/* =====================================================================================================
+   GOOGLE DRIVE (ESPECIFICACION §7)
+   <carpeta raíz del estudio> / ACTAS DE OBRA / <Obra> / { obra.json, AAAA-MM-DD_Vnn_<Autor> / { fotos/, notas.json, acta.docx } }
+   - Identidad por appProperties (actasObra / actasVisita / actasTipo / actasFoto), no por nombre:
+     renombrar una carpeta a mano no rompe el vínculo.
+   - Cada visita tiene UN autor: lo local manda para las mías; las de otros se bajan como solo lectura.
+   - Permiso «drive» completo: con «drive.file» un usuario no vería las carpetas creadas por otro (riesgo R3).
+   ===================================================================================================== */
+const DRIVE_RAIZ_DEFECTO = "1v5x04n0R73pumwZk3SLMXvqriPrl0HVD"; // carpeta compartida del estudio
+const CARPETA_ACTAS = "ACTAS DE OBRA";
+const G_API = "https://www.googleapis.com/drive/v3", G_SUBIDA = "https://www.googleapis.com/upload/drive/v3";
+const MIME_CARPETA = "application/vnd.google-apps.folder";
+const CLAVE_TOKEN = "actas-obra-gtoken";
+class ErrorSesion extends Error {}
+
+/* ---------- Sesión de Google (token de 1 h, guardado solo en este dispositivo) ---------- */
+let gCliente = null, gEspera = null;
+function tokenGoogle() { try { const t = JSON.parse(localStorage.getItem(CLAVE_TOKEN)); return t && t.exp > Date.now() ? t.token : null; } catch { return null; } }
+const driveConectado = () => !!tokenGoogle();
+function iniciarGoogle() {
+  const cid = ajustes().googleClientId;
+  if (!cid) throw new Error("Falta el ID de cliente de Google en Ajustes.");
+  if (!window.google?.accounts?.oauth2) throw new Error("No se ha podido cargar el acceso de Google (¿sin conexión?).");
+  if (!gCliente || gCliente._cid !== cid) {
+    gCliente = google.accounts.oauth2.initTokenClient({
+      client_id: cid, scope: "https://www.googleapis.com/auth/drive",
+      callback: (r) => gEspera?.(r), error_callback: (e) => gEspera?.({ error: e.type }),
+    });
+    gCliente._cid = cid;
+  }
+}
+/** Abre la ventana de Google. Llamar SIEMPRE desde un toque del usuario (si no, el navegador la bloquea). */
+function conectarDrive() {
+  return new Promise((ok, ko) => {
+    try { iniciarGoogle(); } catch (e) { return ko(e); }
+    gEspera = (r) => {
+      gEspera = null;
+      if (r.error) return ko(new Error(r.error === "popup_closed" ? "Se cerró la ventana de Google." : "Google: " + (r.error_description || r.error)));
+      try { localStorage.setItem(CLAVE_TOKEN, JSON.stringify({ token: r.access_token, exp: Date.now() + ((r.expires_in || 3600) - 120) * 1000 })); } catch {}
+      ok();
+    };
+    gCliente.requestAccessToken({ prompt: "" });
+  });
+}
+function desconectarDrive() {
+  const t = tokenGoogle();
+  try { localStorage.removeItem(CLAVE_TOKEN); } catch {}
+  if (t && window.google?.accounts?.oauth2) google.accounts.oauth2.revoke(t, () => {});
+}
+
+/* ---------- Llamadas a la API de Drive ---------- */
+async function gfetch(url, opciones = {}) {
+  const t = tokenGoogle();
+  if (!t) throw new ErrorSesion("Conecta Google Drive.");
+  const r = await fetch(url, { ...opciones, headers: { ...(opciones.headers || {}), Authorization: "Bearer " + t } });
+  if (r.status === 401) { try { localStorage.removeItem(CLAVE_TOKEN); } catch {} throw new ErrorSesion("La sesión de Google ha caducado: vuelve a conectar."); }
+  if (!r.ok) { let m = ""; try { m = (await r.json()).error?.message || ""; } catch {} throw new Error(`Drive ${r.status}: ${m}`); }
+  return r;
+}
+const escQ = (s) => String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+const params = (o) => new URLSearchParams({ supportsAllDrives: "true", ...o }).toString();
+async function gBuscar(q) {
+  const r = await gfetch(`${G_API}/files?${params({ q: q + " and trashed=false", includeItemsFromAllDrives: "true", pageSize: "1000",
+    fields: "files(id,name,mimeType,appProperties,modifiedTime)" })}`);
+  return (await r.json()).files || [];
+}
+const gHijoPorProp = async (padre, clave, valor) =>
+  (await gBuscar(`'${escQ(padre)}' in parents and appProperties has { key='${clave}' and value='${escQ(valor)}' }`))[0] || null;
+async function gCarpeta(nombre, padre, props) {
+  const r = await gfetch(`${G_API}/files?${params({ fields: "id" })}`, { method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name: nombre, mimeType: MIME_CARPETA, parents: [padre], appProperties: props }) });
+  return (await r.json()).id;
+}
+async function gRenombrar(id, nombre) {
+  await gfetch(`${G_API}/files/${id}?${params({ fields: "id" })}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: nombre }) });
+}
+/** Crea (o sustituye el contenido, si se pasa `id`) un archivo con metadatos + contenido en una sola petición. */
+async function gSubir({ nombre, padre, datos, mime, props, id = null }) {
+  const meta = id ? { name: nombre, appProperties: props } : { name: nombre, parents: [padre], appProperties: props };
+  const fd = new FormData();
+  fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
+  fd.append("file", datos instanceof Blob ? datos : new Blob([datos], { type: mime }));
+  const r = await gfetch(`${G_SUBIDA}/files${id ? "/" + id : ""}?${params({ uploadType: "multipart", fields: "id" })}`, { method: id ? "PATCH" : "POST", body: fd });
+  return (await r.json()).id;
+}
+async function gLeerJSON(id) { return (await gfetch(`${G_API}/files/${id}?${params({ alt: "media" })}`)).json(); }
+
+/* ---------- Estructura de carpetas ---------- */
+let idActas = null;
+async function carpetaActas() {
+  if (idActas) return idActas;
+  const raiz = ajustes().driveRaiz || DRIVE_RAIZ_DEFECTO;
+  const f = (await gBuscar(`'${escQ(raiz)}' in parents and name='${CARPETA_ACTAS}' and mimeType='${MIME_CARPETA}'`))[0];
+  return (idActas = f ? f.id : await gCarpeta(CARPETA_ACTAS, raiz, { actasTipo: "raiz" }));
+}
+const nombreCarpeta = (s) => String(s || "").replace(/[\\/:*?"<>|]+/g, "-").trim().slice(0, 120) || "SIN NOMBRE";
+async function carpetaObra(o) {
+  const actas = await carpetaActas();
+  const f = await gHijoPorProp(actas, "actasObra", o.id);
+  if (!f) return gCarpeta(nombreCarpeta(o.titulo), actas, { actasObra: o.id });
+  if (f.name !== nombreCarpeta(o.titulo)) await gRenombrar(f.id, nombreCarpeta(o.titulo));
+  return f.id;
+}
+async function subirJSON(padre, tipo, nombre, objeto) {
+  const prev = await gHijoPorProp(padre, "actasTipo", tipo);
+  return gSubir({ nombre, padre, datos: JSON.stringify(objeto, null, 1), mime: "application/json", props: { actasTipo: tipo }, id: prev?.id });
+}
+
+/** Sube la ficha de la obra (carpeta + obra.json). */
+async function subirObra(o) {
+  const carpeta = await carpetaObra(o);
+  await subirJSON(carpeta, "obra", "obra.json", { ...o, driveOk: undefined });
+  o.driveId = carpeta; o.driveOk = true;
+  await dbPut("obras", o, false);
+  return carpeta;
+}
+const nombreVisita = (v) => `${v.fecha}_V${String(v.n).padStart(2, "0")}_${nombreCarpeta(v.autor || "SIN AUTOR").replace(/\s+/g, "_")}`;
+
+/** Sube la visita: carpeta propia, fotos nuevas, notas.json (todo lo recogido) y, si se pasa, el acta .docx. */
+async function subirVisita(v, o, acta = null, avance = () => {}) {
+  if (!o.driveOk || !o.driveId) await subirObra(o);
+  let carpeta = (await gHijoPorProp(o.driveId, "actasVisita", v.id))?.id;
+  if (!carpeta) carpeta = await gCarpeta(nombreVisita(v), o.driveId, { actasVisita: v.id });
+  else await gRenombrar(carpeta, nombreVisita(v));
+  // Fotos: solo las que aún no están arriba
+  v.fotosDrive = v.fotosDrive || {};
+  const ids = v.notas.flatMap((n) => n.fotos).filter((f) => !v.fotosDrive[f]);
+  if (ids.length) {
+    const cFotos = (await gHijoPorProp(carpeta, "actasTipo", "fotos"))?.id || await gCarpeta("fotos", carpeta, { actasTipo: "fotos" });
+    let k = Object.keys(v.fotosDrive).length; // numeración de archivos continua entre subidas
+    for (const [i, fid] of ids.entries()) {
+      avance(`Subiendo foto ${i + 1} de ${ids.length}…`);
+      k++;
+      const f = await dbGet("fotos", fid);
+      if (f) v.fotosDrive[fid] = await gSubir({ nombre: `foto-${String(k).padStart(2, "0")}.jpg`, padre: cFotos, datos: f.blob, mime: "image/jpeg", props: { actasFoto: fid } });
+    }
+  }
+  avance("Guardando notas…");
+  await subirJSON(carpeta, "visita", "notas.json", { ...v, driveOk: undefined, soloLectura: undefined, version: 1 });
+  if (acta) {
+    avance("Subiendo acta…");
+    const prev = await gHijoPorProp(carpeta, "actasTipo", "acta");
+    await gSubir({ nombre: acta.nombre, padre: carpeta, datos: acta.blob, mime: acta.blob.type, props: { actasTipo: "acta" }, id: prev?.id });
+  }
+  v.driveCarpeta = carpeta; v.driveOk = true;
+  await dbPut("visitas", v, false);
+  return carpeta;
+}
+
+/** Baja de Drive las obras y las visitas de OTROS autores (las propias, manda lo local). */
+let sincronizando = false, ultimaBajada = 0;
+async function bajarDeDrive(soloObraId = null) {
+  if (sincronizando || !driveConectado()) return 0;
+  sincronizando = true;
+  let cambios = 0;
+  try {
+    const actas = await carpetaActas();
+    const yo = (ajustes().autor || "").trim().toLowerCase();
+    const carpetas = (await gBuscar(`'${actas}' in parents and mimeType='${MIME_CARPETA}'`)).filter((f) => f.appProperties?.actasObra);
+    for (const c of carpetas) {
+      const oid = c.appProperties.actasObra;
+      if (soloObraId && oid !== soloObraId) continue;
+      const fj = await gHijoPorProp(c.id, "actasTipo", "obra");
+      if (fj) {
+        const remota = await gLeerJSON(fj.id), local = await dbGet("obras", oid);
+        if (!local || (local.driveOk !== false && (remota.modificada || 0) > (local.modificada || 0))) {
+          await dbPut("obras", { ...remota, driveId: c.id, driveOk: true }, false); cambios++;
+        }
+      }
+      const carpetasV = (await gBuscar(`'${c.id}' in parents and mimeType='${MIME_CARPETA}'`)).filter((f) => f.appProperties?.actasVisita);
+      for (const cv of carpetasV) {
+        const local = await dbGet("visitas", cv.appProperties.actasVisita);
+        if (local && !local.soloLectura) continue; // es mía (o la estoy editando aquí): manda lo local
+        const fn = await gHijoPorProp(cv.id, "actasTipo", "visita");
+        if (!fn) continue;
+        const remota = await gLeerJSON(fn.id);
+        if (local && (remota.modificada || 0) <= (local.modificada || 0)) continue;
+        const ajena = (remota.autor || "").trim().toLowerCase() !== yo;
+        await dbPut("visitas", { ...remota, driveCarpeta: cv.id, driveOk: true, soloLectura: ajena }, false); cambios++;
+      }
+    }
+    ultimaBajada = Date.now();
+  } finally { sincronizando = false; }
+  return cambios;
+}
+/** Sube todo lo pendiente: obras sin subir y visitas con acta generada que han cambiado. */
+async function subirPendientes(avance = () => {}) {
+  let n = 0;
+  for (const o of (await dbAll("obras")).filter((o) => !o.driveOk)) { avance(`Subiendo obra ${o.titulo}…`); await subirObra(o); n++; }
+  for (const v of (await dbAll("visitas")).filter((v) => !v.soloLectura && v.estado === "generada" && !v.driveOk)) {
+    const o = await dbGet("obras", v.obraId);
+    // Se regenera el acta con los datos actuales para que la carpeta de Drive siempre la tenga
+    if (o) { avance(`Subiendo visita nº ${v.n}…`); await subirVisita(v, o, await crearActaDocx(v, o), avance); n++; }
+  }
+  return n;
+}
+const mensajeDrive = (e) => (e instanceof ErrorSesion ? e.message : "Drive: " + (e.message || "error"));
+
+/* ---------- Barra, pie y enrutado (hash) ---------- */
+function barra(titulo, sub = "", atras = null, extra = "") {
+  $("#barra").innerHTML =
+    (atras ? `<a href="${esc(atras)}" aria-label="Volver">‹</a>` : "") +
+    `<div class="tit"><h1>${esc(titulo)}</h1>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>` + extra;
+}
+function pie(html) { const p = $("#pie"); p.innerHTML = html || ""; p.classList.toggle("visible", !!html); }
+async function render() {
+  pararDictado(); liberarUrls(); pie(""); scrollTo(0, 0);
+  const [a, b, c] = location.hash.replace(/^#\/?/, "").split("/");
+  try {
+    if (!a) return await vObras();
+    if (a === "obra" && b === "nueva") return await vFichaObra(null);
+    if (a === "obra" && c === "editar") return await vFichaObra(b);
+    if (a === "obra") return await vObra(b);
+    if (a === "visita" && c === "revision") return await vRevision(b);
+    if (a === "visita") return await vVisita(b);
+    if (a === "ajustes") return vAjustes();
+    location.hash = "#/";
+  } catch (e) { console.error(e); app.innerHTML = `<div class="alert alert-danger">Error: ${esc(e.message)}</div>`; }
+}
+window.addEventListener("hashchange", render);
+
+/* =====================================================================================================
+   PANTALLA 1 · Obras en marcha
+   ===================================================================================================== */
+async function vObras() {
+  const aj = ajustes();
+  barra("Obras en marcha", aj.autor ? `Técnico: ${aj.autor}` : "", null, `<a href="#/ajustes" aria-label="Ajustes">⚙︎</a>`);
+  const obras = (await dbAll("obras")).sort((x, y) => x.titulo.localeCompare(y.titulo, "es"));
+  const resumen = await Promise.all(obras.map(async (o) => {
+    const vs = await visitasDe(o.id);
+    const ult = vs.map((v) => v.fecha).sort().pop();
+    return { o, n: vs.length, ult };
+  }));
+  const tarjeta = ({ o, n, ult }) =>
+    `<a class="tarjeta" href="#/obra/${esc(o.id)}"><b>${esc(o.titulo)}</b>
+      <div>${esc(o.direccion || "")}</div>
+      <div class="meta">${n} visita${n === 1 ? "" : "s"}${ult ? ` · última ${fmtFecha(ult)}` : ""}</div></a>`;
+  const activas = resumen.filter((r) => r.o.activa !== false), archivadas = resumen.filter((r) => r.o.activa === false);
+  // Estado de Drive: pendientes de subir y botón de conectar / sincronizar
+  const pendientes = obras.filter((o) => !o.driveOk).length +
+    (await dbAll("visitas")).filter((v) => !v.soloLectura && v.estado === "generada" && !v.driveOk).length;
+  const bloqueDrive = !aj.googleClientId ? "" : !driveConectado()
+    ? `<div class="alert alert-info fila"><span class="crece">Google Drive sin conectar${pendientes ? ` · ${pendientes} pendiente${pendientes === 1 ? "" : "s"} de subir` : ""}.</span><button class="btn mini" data-acc="conectarDrive">Conectar</button></div>`
+    : `<div class="fila" style="margin-bottom:12px"><span class="meta crece">☁︎ Drive conectado${pendientes ? ` · <b>${pendientes} pendiente${pendientes === 1 ? "" : "s"}</b>` : " · al día"}</span><button class="btn mini" data-acc="sincronizar">⟳ Sincronizar</button></div>`;
+  app.innerHTML =
+    (!aj.autor || !aj.apiKey ? `<div class="alert alert-warning">Antes de la primera visita, pon tu nombre${aj.apiKey ? "" : " y tu clave de IA"} en <a href="#/ajustes">Ajustes</a>.</div>` : "") +
+    bloqueDrive +
+    `<a class="btn primario ancho" href="#/obra/nueva">+ Nueva obra</a>
+     <h2>En marcha</h2>` +
+    (activas.length ? activas.map(tarjeta).join("") : `<div class="vacio">Todavía no hay obras. Crea la primera.</div>`) +
+    (archivadas.length ? `<details><summary>Obras archivadas (${archivadas.length})</summary>${archivadas.map(tarjeta).join("")}</details>` : "");
+  // Al abrir: bajar en segundo plano lo que hayan subido los demás (como mucho cada 2 min)
+  if (driveConectado() && navigator.onLine && Date.now() - ultimaBajada > 120000) {
+    bajarDeDrive().then((n) => { if (n && !location.hash.replace(/^#\/?/, "")) vObras(); })
+      .catch((e) => toast(mensajeDrive(e), 4000));
+  }
+}
+
+/** Sincronización manual: sube lo pendiente y baja lo de los demás. */
+async function sincronizar(btn) {
+  if (!navigator.onLine) return toast("Sin conexión.");
+  btn.disabled = true;
+  try {
+    const subidas = await subirPendientes((m) => (btn.textContent = m));
+    ultimaBajada = 0;
+    const bajadas = await bajarDeDrive();
+    toast(`Drive al día · ${subidas} subida${subidas === 1 ? "" : "s"}, ${bajadas} novedad${bajadas === 1 ? "" : "es"}.`);
+  } catch (e) { console.error(e); toast(mensajeDrive(e), 5000); }
+  render();
+}
+
+/* =====================================================================================================
+   PANTALLA 2 · Ficha de obra (datos fijos del acta)
+   ===================================================================================================== */
+async function vFichaObra(id) {
+  const o = id ? await dbGet("obras", id) : { id: uid(), activa: true, copias: "1", creada: Date.now() };
+  if (!o) return (location.hash = "#/");
+  barra(id ? "Datos de la obra" : "Nueva obra", id ? o.titulo : "", id ? `#/obra/${id}` : "#/");
+  app.innerHTML =
+    `<form id="fObra">` +
+    CAMPOS_OBRA.map(([k, l, ej, ob]) =>
+      `<label class="campo">${esc(l)}${ob ? " *" : ""}<input name="${k}" value="${esc(o[k] || "")}" placeholder="${esc(ej || "")}" ${ob ? "required" : ""} autocomplete="off"></label>`
+    ).join("") +
+    `<h2>Firmas (opcional)</h2><div class="meta" style="margin-bottom:8px">Si se dejan vacías, se usan los nombres de arriba.</div>
+     <label class="campo">Firma constructora<input name="firma_constructor" value="${esc(o.firma_constructor || "")}"></label>
+     <label class="campo">Firma director de obra<input name="firma_do" value="${esc(o.firma_do || "")}"></label>
+     <label class="campo">Firma director de ejecución<input name="firma_deo" value="${esc(o.firma_deo || "")}"></label>
+     <button class="btn primario ancho" type="submit">Guardar obra</button>` +
+    (id ? `<p></p><button class="btn peligro ancho" type="button" id="bArchivar">${o.activa === false ? "Reactivar obra" : "Archivar obra (terminada)"}</button>` : "") +
+    `</form>`;
+  $("#fObra").onsubmit = async (e) => {
+    e.preventDefault();
+    new FormData(e.target).forEach((v, k) => (o[k] = String(v).trim()));
+    await dbPut("obras", o);
+    // Crear/actualizar su carpeta en Drive en segundo plano (si falla, queda pendiente)
+    if (driveConectado() && navigator.onLine) subirObra(o).then(() => toast("Carpeta de la obra creada en Drive ✓")).catch((e) => toast(mensajeDrive(e), 4000));
+    location.hash = `#/obra/${o.id}`;
+  };
+  const bA = $("#bArchivar");
+  if (bA) bA.onclick = async () => {
+    o.activa = o.activa === false; await dbPut("obras", o);
+    if (driveConectado() && navigator.onLine) subirObra(o).catch(() => {});
+    location.hash = "#/";
+  };
+}
+
+/* =====================================================================================================
+   PANTALLA 3 · Obra: histórico de visitas + nueva visita
+   ===================================================================================================== */
+async function vObra(id) {
+  O = await dbGet("obras", id);
+  if (!O) return (location.hash = "#/");
+  barra(O.titulo, O.direccion || "", "#/", `<a href="#/obra/${esc(id)}/editar" aria-label="Editar">✎</a>`);
+  const vs = (await visitasDe(id)).sort((a, b) => b.n - a.n);
+  const etiqueta = (v) => v.soloLectura ? `<span class="tag tag-blue">De ${esc(v.autor || "otro")}</span>`
+    : v.estado === "generada" ? `<span class="tag tag-green">Acta generada</span>${v.driveOk ? "" : ` <span class="tag tag-warning">Sin subir</span>`}`
+    : `<span class="tag tag-warning">En curso</span>`;
+  const enlaceDrive = (cid) => `https://drive.google.com/drive/folders/${encodeURIComponent(cid)}`;
+  app.innerHTML =
+    `<button class="btn primario ancho" id="bNueva">+ Nueva visita (hoy)</button>` +
+    (O.driveId ? `<p class="meta"><a href="${enlaceDrive(O.driveId)}" target="_blank" rel="noopener">Abrir la carpeta de la obra en Drive ↗</a></p>` : "") +
+    `<h2>Visitas</h2>` +
+    (vs.length ? vs.map((v) => {
+      const cuerpo = `<div class="fila"><b class="crece">Visita nº ${v.n} · ${fmtFecha(v.fecha)}</b>${etiqueta(v)}</div>
+        <div class="meta">${esc(v.autor || "")} · ${v.notas.length} nota${v.notas.length === 1 ? "" : "s"} · ${v.notas.reduce((s, n) => s + n.fotos.length, 0)} fotos</div>`;
+      // Las visitas de otros técnicos no se editan aquí: se abren en Drive
+      return v.soloLectura
+        ? `<a class="tarjeta" href="${enlaceDrive(v.driveCarpeta)}" target="_blank" rel="noopener">${cuerpo}<div class="meta">Solo lectura · abrir en Drive ↗</div></a>`
+        : `<a class="tarjeta" href="#/visita/${esc(v.id)}">${cuerpo}</a>`;
+    }).join("") : `<div class="vacio">Sin visitas todavía.</div>`);
+  $("#bNueva").onclick = async (e) => {
+    // Antes de crear: traer de Drive la última visita de los demás (pendientes heredados y número correcto)
+    if (driveConectado() && navigator.onLine) {
+      e.target.disabled = true; e.target.textContent = "Comprobando Drive…";
+      try { await bajarDeDrive(id); } catch (err) { toast(mensajeDrive(err) + " · Se crea igualmente.", 4000); }
+    }
+    nuevaVisita(id, (await visitasDe(id)).sort((a, b) => b.n - a.n));
+  };
+}
+
+/** Crea la visita de hoy heredando los pendientes abiertos y los asistentes de la anterior. */
+async function nuevaVisita(obraId, vs) {
+  const prev = vs[0]; // la más reciente (vs viene ordenada por nº desc)
+  const heredados = prev ? [
+    ...prev.heredados.filter((h) => h.abierto).map((h) => ({ id: uid(), texto: h.texto, abierto: true })),
+    ...prev.notas.filter((n) => n.tipo === "pendiente" && textoNota(n)).map((n) => ({ id: uid(), texto: textoNota(n), abierto: true })),
+  ] : [];
+  const v = {
+    id: uid(), obraId, n: (prev ? prev.n : 0) + 1, fecha: hoyISO(), autor: ajustes().autor || "",
+    asistentes: prev ? { ...prev.asistentes } : { propiedad: false, do: false, constructora: false, deo: false },
+    heredados, notas: [], estado: "en curso", creada: Date.now(),
+  };
+  await dbPut("visitas", v);
+  location.hash = `#/visita/${v.id}`;
+}
+
+/* =====================================================================================================
+   PANTALLA 4 · Visita en curso: asistentes, pendientes heredados, notas (dictado) con fotos
+   ===================================================================================================== */
+async function vVisita(id) {
+  V = await dbGet("visitas", id);
+  if (!V) return (location.hash = "#/");
+  if (V.soloLectura) { const ob = V.obraId; V = null; toast("Es una visita de otro técnico: ábrela en Drive."); return (location.hash = `#/obra/${ob}`); }
+  O = await dbGet("obras", V.obraId);
+  barra(`Visita nº ${V.n}`, O.titulo, `#/obra/${O.id}`);
+  const fotosHtml = async (n) => (await Promise.all(n.fotos.map(async (f) =>
+    `<div class="foto"><img src="${await urlFoto(f)}" alt=""><button data-acc="quitarFoto" data-nota="${n.id}" data-foto="${f}" aria-label="Quitar foto">×</button></div>`))).join("");
+  const notasHtml = (await Promise.all(V.notas.map(async (n, i) => `
+    <div class="tarjeta" id="nota-${n.id}">
+      <div class="fila"><b class="crece">Nota ${i + 1}</b>
+        <button class="btn mini peligro" data-acc="borrarNota" data-nota="${n.id}">Borrar</button></div>
+      <div class="fotos">${await fotosHtml(n)}</div>
+      <div class="fila">
+        <button class="btn mini" data-acc="camara" data-nota="${n.id}">📷 Foto</button>
+        <button class="btn mini" data-acc="galeria" data-nota="${n.id}">🖼 Galería</button>
+        <button class="btn mini" data-acc="dictar" data-nota="${n.id}">🎤 Dictar</button>
+      </div>
+      <textarea data-campo="bruto" data-nota="${n.id}" placeholder="Dicta con el micrófono del teclado 🎙 o con «Dictar»">${esc(n.bruto)}</textarea>
+      <div class="fila" style="margin-top:8px">
+        <select class="crece" data-campo="tipo" data-nota="${n.id}" aria-label="Tipo">
+          <option value="">Tipo: lo propone la IA</option>
+          ${Object.entries(TIPOS).map(([k, l]) => `<option value="${k}" ${n.tipo === k ? "selected" : ""}>${l}</option>`).join("")}
+        </select>
+        <select class="crece ${n.tipo && n.tipo !== "asunto" ? "oculto" : ""}" data-campo="bloque" data-nota="${n.id}" aria-label="Bloque">
+          <option value="">Bloque: lo propone la IA</option>
+          ${BLOQUES.map((b) => `<option value="${b.id}" ${n.bloque === b.id ? "selected" : ""}>${b.nombre}</option>`).join("")}
+        </select>
+      </div>
+    </div>`))).join("");
+
+  app.innerHTML = `
+    <label class="campo">Fecha de la visita<input type="date" data-campo="fecha" value="${esc(V.fecha)}"></label>
+    <h2>Asistentes</h2>
+    <div class="fila">${ASISTENTES.map(([k, l]) => `<button class="chip ${V.asistentes[k] ? "activo" : ""}" data-acc="asistente" data-k="${k}">${l}</button>`).join("")}</div>
+    ${V.heredados.length ? `<h2>Pendientes de la visita anterior</h2>
+      <div class="meta" style="margin-bottom:8px">Los que sigan abiertos pasan al punto 3 del acta.</div>
+      ${V.heredados.map((h) => `<div class="tarjeta fila"><span class="crece">${esc(h.texto)}</span>
+        <button class="chip ${h.abierto ? "activo" : ""}" data-acc="heredado" data-h="${h.id}">${h.abierto ? "Sigue abierto" : "Cerrado ✓"}</button></div>`).join("")}` : ""}
+    <h2>Notas de la visita</h2>
+    ${notasHtml || `<div class="vacio">Haz una foto y dicta lo que ves, o añade una nota sin foto.</div>`}
+    <div class="fila"><button class="btn dorado crece" data-acc="notaFoto">📷 Nota con foto</button>
+      <button class="btn crece" data-acc="notaSinFoto">+ Nota sin foto</button></div>`;
+  pie(`<a class="btn primario" href="#/visita/${esc(V.id)}/revision">Revisar acta →</a>`);
+}
+
+/* ---------- Fotos: compresión (lado mayor 1600 px, JPEG 0,82) y alta en la nota ---------- */
+let notaDestino = null;
+async function comprimir(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ko(new Error("No se pudo leer la imagen")); i.src = url; });
+    const k = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const ancho = Math.round(img.naturalWidth * k), alto = Math.round(img.naturalHeight * k);
+    const cv = document.createElement("canvas"); cv.width = ancho; cv.height = alto;
+    cv.getContext("2d").drawImage(img, 0, 0, ancho, alto);
+    const blob = await new Promise((ok) => cv.toBlob(ok, "image/jpeg", 0.82));
+    return { blob, ancho, alto };
+  } finally { URL.revokeObjectURL(url); }
+}
+async function anadirFotos(files) {
+  const n = V && V.notas.find((x) => x.id === notaDestino);
+  if (!n || !files.length) return;
+  for (const file of files) {
+    try { const f = await comprimir(file); const id = uid(); await dbPut("fotos", { id, ...f }); n.fotos.push(id); }
+    catch (e) { toast(e.message); }
+  }
+  await dbPut("visitas", V);
+  await vVisita(V.id);
+  document.getElementById(`nota-${n.id}`)?.scrollIntoView({ block: "center" });
+}
+for (const sel of ["#entradaCamara", "#entradaGaleria"]) {
+  $(sel).addEventListener("change", async (e) => { const fs = [...e.target.files]; e.target.value = ""; await anadirFotos(fs); });
+}
+function nuevaNota() { const n = { id: uid(), bruto: "", mejorado: "", tipo: "", bloque: "", pie: "", fotos: [] }; V.notas.push(n); return n; }
+
+/* ---------- Dictado del navegador (de Visitas v2). En iPhone la vía fiable es el micrófono del teclado ---------- */
+let rec = null, recBtn = null;
+function pararDictado() { if (rec) { try { rec.stop(); } catch {} rec = null; } if (recBtn) { recBtn.classList.remove("rec"); recBtn = null; } }
+function dictar(ta, btn) {
+  if (rec) return pararDictado();
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return toast("Este navegador no dicta. Usa el micrófono 🎙 del teclado (funciona sin cobertura).", 4000);
+  if (!navigator.onLine) return toast("Sin conexión: usa el micrófono 🎙 del teclado.", 4000);
+  rec = new SR(); recBtn = btn;
+  rec.lang = "es-ES"; rec.continuous = true; rec.interimResults = false;
+  rec.onresult = (e) => {
+    for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) {
+      const t = e.results[i][0].transcript.trim();
+      if (t) { ta.value = (ta.value ? ta.value.trimEnd() + " " : "") + t; ta.dispatchEvent(new Event("input", { bubbles: true })); }
+    }
+  };
+  rec.onerror = (e) => { toast(e.error === "not-allowed" ? "Permiso de micrófono denegado." : "El dictado falló: usa el micrófono 🎙 del teclado.", 4000); pararDictado(); };
+  rec.onend = () => { if (recBtn) recBtn.classList.remove("rec"); rec = null; recBtn = null; };
+  try { rec.start(); btn.classList.add("rec"); toast("Dictando… pulsa otra vez para parar.", 2000); } catch { pararDictado(); }
+}
+
+/* ---------- Eventos delegados (visita y revisión) ---------- */
+// Un único manejador para #app y para el pie fijo (que vive fuera de #app)
+app.addEventListener("click", (e) => alClic(e));
+$("#pie").addEventListener("click", (e) => alClic(e));
+async function alClic(e) {
+  const b = e.target.closest("[data-acc]");
+  if (!b) return;
+  // Acciones de Drive (válidas en cualquier pantalla). conectarDrive debe ir sin await previo: abre la ventana de Google
+  if (b.dataset.acc === "conectarDrive") {
+    return conectarDrive().then(() => { toast("Google Drive conectado ✓"); ultimaBajada = 0; render(); }).catch((err) => toast(err.message, 5000));
+  }
+  if (b.dataset.acc === "desconectarDrive") { desconectarDrive(); toast("Drive desconectado en este dispositivo."); return render(); }
+  if (b.dataset.acc === "sincronizar") return sincronizar(b);
+  if (!V) return;
+  const n = V.notas.find((x) => x.id === b.dataset.nota);
+  switch (b.dataset.acc) {
+    case "asistente": V.asistentes[b.dataset.k] = !V.asistentes[b.dataset.k]; b.classList.toggle("activo"); guardarVisitaLuego(); break;
+    case "heredado": { const h = V.heredados.find((x) => x.id === b.dataset.h); h.abierto = !h.abierto;
+      b.classList.toggle("activo", h.abierto); b.textContent = h.abierto ? "Sigue abierto" : "Cerrado ✓"; guardarVisitaLuego(); break; }
+    // iOS solo abre la cámara si el clic es síncrono dentro del gesto: primero .click(), luego guardar
+    case "notaFoto": notaDestino = nuevaNota().id; $("#entradaCamara").click(); await dbPut("visitas", V); await vVisita(V.id); break;
+    case "notaSinFoto": { const nn = nuevaNota(); await dbPut("visitas", V); await vVisita(V.id);
+      document.querySelector(`textarea[data-nota="${nn.id}"]`)?.focus(); break; }
+    case "camara": notaDestino = n.id; $("#entradaCamara").click(); break;
+    case "galeria": notaDestino = n.id; $("#entradaGaleria").click(); break;
+    case "dictar": dictar(document.querySelector(`textarea[data-campo="bruto"][data-nota="${n.id}"]`), b); break;
+    case "quitarFoto": if (confirm("¿Quitar esta foto de la nota?")) { n.fotos = n.fotos.filter((f) => f !== b.dataset.foto); await dbDel("fotos", b.dataset.foto); await dbPut("visitas", V); render(); } break;
+    case "borrarNota": if (confirm("¿Borrar la nota y sus fotos?")) { for (const f of n.fotos) await dbDel("fotos", f); V.notas = V.notas.filter((x) => x !== n); await dbPut("visitas", V); render(); } break;
+    case "subir": case "bajar": { const i = V.notas.indexOf(n), j = b.dataset.acc === "subir" ? i - 1 : i + 1;
+      if (j >= 0 && j < V.notas.length) { [V.notas[i], V.notas[j]] = [V.notas[j], V.notas[i]]; await dbPut("visitas", V); await vRevision(V.id); } break; }
+    case "ia": await mejorarConIA(b); break;
+    case "sinIA": V.notas.forEach((x) => { if (!x.mejorado) x.mejorado = x.bruto; }); await dbPut("visitas", V); await vRevision(V.id); break;
+    case "generar": await generar(b); break;
+    case "compartir": await compartirUltima(); break;
+  }
+}
+// Cambios de campos: se guardan sin repintar (no se pierde el foco ni el teclado)
+app.addEventListener("input", (e) => {
+  const c = e.target.dataset.campo;
+  if (!c || !V) return;
+  if (c === "fecha") V.fecha = e.target.value;
+  else { const n = V.notas.find((x) => x.id === e.target.dataset.nota); if (n) n[c] = e.target.value; }
+  guardarVisitaLuego();
+});
+app.addEventListener("change", async (e) => {
+  const c = e.target.dataset.campo;
+  if ((c === "tipo" || c === "bloque") && V) {
+    const n = V.notas.find((x) => x.id === e.target.dataset.nota);
+    if (!n) return;
+    n[c] = e.target.value; // no depender de que el navegador emita también «input» en los <select>
+    clearTimeout(tGuardar);
+    await dbPut("visitas", V);
+    if (location.hash.endsWith("/revision")) { const y = scrollY; await vRevision(V.id); scrollTo(0, y); } // renumerar sin perder la posición
+    else if (c === "tipo") document.querySelector(`select[data-campo="bloque"][data-nota="${n.id}"]`)?.classList.toggle("oculto", !!n.tipo && n.tipo !== "asunto");
+  }
+});
+
+/* =====================================================================================================
+   PANTALLA 5 · Revisión (obligatoria): texto mejorado ↔ dictado, tipo/bloque, pies, orden → generar .docx
+   ===================================================================================================== */
+async function vRevision(id) {
+  V = await dbGet("visitas", id);
+  if (!V) return (location.hash = "#/");
+  if (V.soloLectura) { const ob = V.obraId; V = null; toast("Es una visita de otro técnico: ábrela en Drive."); return (location.hash = `#/obra/${ob}`); }
+  O = await dbGet("obras", V.obraId);
+  barra("Revisión del acta", `Visita nº ${V.n} · ${fmtFecha(V.fecha)}`, `#/visita/${V.id}`);
+  const aj = ajustes();
+  const conTexto = V.notas.filter((n) => n.bruto.trim());
+  const sinMejorar = conTexto.filter((n) => !n.mejorado).length;
+
+  // Numeración 2.x idéntica a la del generador: bloques en orden y, dentro, notas en orden
+  const numDe = new Map(); let k = 0;
+  BLOQUES.forEach((b) => V.notas.filter((n) => n.tipo === "asunto" && n.bloque === b.id && textoNota(n)).forEach((n) => numDe.set(n.id, "2." + ++k)));
+
+  const tarjeta = async (n) => `
+    <div class="tarjeta">
+      <div class="fila"><span class="num">${numDe.get(n.id) || "·"}</span>
+        <select class="crece" data-campo="tipo" data-nota="${n.id}">${[["", "— elige tipo —"], ...Object.entries(TIPOS)].map(([v, l]) => `<option value="${v}" ${n.tipo === v ? "selected" : ""}>${l}</option>`).join("")}</select>
+        ${n.tipo === "asunto" ? `<select class="crece" data-campo="bloque" data-nota="${n.id}">${[["", "— elige bloque —"], ...BLOQUES.map((b) => [b.id, b.nombre])].map(([v, l]) => `<option value="${v}" ${n.bloque === v ? "selected" : ""}>${l}</option>`).join("")}</select>` : ""}
+      </div>
+      <textarea data-campo="mejorado" data-nota="${n.id}" placeholder="Texto del acta">${esc(n.mejorado)}</textarea>
+      <details><summary>Dictado original</summary><div class="original">${esc(n.bruto)}</div></details>
+      ${n.fotos.length ? `<div class="fotos">${(await Promise.all(n.fotos.map(async (f) => `<div class="foto"><img src="${await urlFoto(f)}" alt=""></div>`))).join("")}</div>
+        <label class="campo">Pie de foto (resumen breve)<textarea data-campo="pie" data-nota="${n.id}" style="min-height:60px">${esc(n.pie)}</textarea></label>` : ""}
+      <div class="fila"><button class="btn mini" data-acc="subir" data-nota="${n.id}">↑</button><button class="btn mini" data-acc="bajar" data-nota="${n.id}">↓</button></div>
+    </div>`;
+
+  const grupo = async (titulo, notas) => notas.length ? `<h2>${titulo}</h2>${(await Promise.all(notas.map(tarjeta))).join("")}` : "";
+  const estado = V.notas.filter((n) => n.tipo === "estado");
+  const asuntos = BLOQUES.flatMap((b) => V.notas.filter((n) => n.tipo === "asunto" && n.bloque === b.id));
+  const pendientes = V.notas.filter((n) => n.tipo === "pendiente");
+  const sinClasificar = V.notas.filter((n) => !n.tipo || (n.tipo === "asunto" && !n.bloque));
+  const heredadosAbiertos = V.heredados.filter((h) => h.abierto);
+
+  app.innerHTML =
+    `<div class="alert alert-info">La IA solo mejora la redacción. Comprueba cifras, medidas y nombres antes de generar.</div>` +
+    (conTexto.length === 0 ? `<div class="alert alert-warning">No hay notas con texto todavía.</div>` :
+      aj.apiKey ? `<button class="btn dorado ancho" data-acc="ia">✨ ${sinMejorar ? "Mejorar redacción con IA" : "Volver a mejorar con IA"}</button>`
+                : `<div class="alert alert-warning">Sin clave de IA en <a href="#/ajustes">Ajustes</a>: revisa y corrige los textos a mano.</div>` +
+                  (sinMejorar ? `<button class="btn ancho" data-acc="sinIA">Usar el dictado tal cual (${sinMejorar})</button>` : "")) +
+    (await grupo("Sin clasificar (elige tipo y bloque)", sinClasificar)) +
+    (await grupo("1 · Estado actual", estado)) +
+    (await grupo("2 · Asuntos a tratar", asuntos)) +
+    (await grupo("3 · Temas pendientes", pendientes)) +
+    (heredadosAbiertos.length ? `<div class="meta">Además pasan al punto 3 los ${heredadosAbiertos.length} pendientes heredados que siguen abiertos.</div>` : "") +
+    `<div id="avisoGen"></div>`;
+  pie(`<button class="btn primario" data-acc="generar">Generar acta .docx</button>` +
+      (ultimoActa && ultimoActa.visita === V.id && navigator.canShare ? `<button class="btn" data-acc="compartir">Compartir</button>` : ""));
+}
+
+/* ---------- IA de redacción (SDK oficial de Anthropic, salida estructurada) ---------- */
+const SISTEMA_IA = `Eres el redactor de las actas de visita de obra de un estudio de arquitectura (dirección de obra y dirección de ejecución).
+Recibes las notas que un técnico ha DICTADO en obra (texto de reconocimiento de voz, con errores y frases coloquiales).
+Tu único trabajo es REDACTAR cada nota en el registro técnico de un acta. Reglas:
+1. No añadas hechos, cifras, medidas, materiales, nombres ni conclusiones que no estén en el dictado. No inventes causas ni normativa.
+2. Conserva TODAS las cifras, unidades, nombres de personas y empresas, ubicaciones y plazos tal como se dictaron.
+3. Corrige solo errores evidentes del reconocimiento de voz (palabras mal transcritas, puntuación, mayúsculas). Si una palabra no se entiende o es ambigua, déjala y añade «[revisar]» detrás.
+4. Estilo del acta: impersonal y en presente o futuro, frases completas y concisas. Ejemplos del registro buscado:
+   «Se ha comprobado que el aislamiento XPS en el canto del forjado tiene un espesor de 3 cm en los perímetros.»
+   «Se recuerda que todo el personal tiene que llevar los EPIs de seguridad.»
+   «La constructora deberá vigilar el estado y estabilidad de los taludes de excavación.»
+   «El ingeniero de instalaciones comunica que la compañía suministradora ha dado el visto bueno al cuarto de contadores.»
+5. Una nota dictada = una nota redactada (mismo id). No fusiones ni dividas notas.
+6. tipo: si la nota trae tipo, devuélvelo igual. Si viene vacío, elige: «estado» (actividades en ejecución en la obra; texto breve en MAYÚSCULAS, p. ej. «ESTRUCTURA - FORJADO PLANTA 1»), «pendiente» (algo que queda por hacer, confirmar o recibir) o «asunto» (todo lo demás).
+7. bloque (solo para asunto; si no es asunto usa «ninguno»): si la nota trae bloque, devuélvelo igual. Si no: do = dirección de obra / técnica; sys = seguridad y salud; prop = propiedad; inst = instalaciones y compañías suministradoras; cons = constructora (organización, plazos, medios).
+8. pie: solo si tiene_fotos es true, un resumen de 4 a 12 palabras del contenido de la nota, sin punto final (si no tiene fotos, cadena vacía). Sale SOLO del texto; no describas la imagen.`;
+const ESQUEMA_IA = {
+  type: "object", additionalProperties: false, required: ["notas"],
+  properties: { notas: { type: "array", items: {
+    type: "object", additionalProperties: false, required: ["id", "texto", "tipo", "bloque", "pie"],
+    properties: {
+      id: { type: "string" }, texto: { type: "string" },
+      tipo: { type: "string", enum: ["asunto", "estado", "pendiente"] },
+      bloque: { type: "string", enum: ["do", "sys", "prop", "inst", "cons", "ninguno"] },
+      pie: { type: "string" },
+    } } } },
+};
+async function mejorarConIA(btn) {
+  const aj = ajustes();
+  const notas = V.notas.filter((n) => n.bruto.trim());
+  if (!notas.length) return toast("No hay dictados que mejorar.");
+  if (!navigator.onLine) return toast("Sin conexión: la IA necesita red. Puedes revisar a mano.", 4000);
+  btn.disabled = true; btn.textContent = "Mejorando la redacción…";
+  try {
+    const client = new Anthropic({ apiKey: aj.apiKey, dangerouslyAllowBrowser: true }); // clave del propio dispositivo
+    const resp = await client.beta.messages.create({
+      model: aj.modelo || MODELO_DEFECTO,
+      max_tokens: 16000,
+      betas: ["server-side-fallback-2026-07-01"], fallbacks: "default", // si el modelo declina, reintenta en otro
+      output_config: { effort: "low", format: { type: "json_schema", schema: ESQUEMA_IA } },
+      system: SISTEMA_IA,
+      messages: [{ role: "user", content: JSON.stringify({
+        obra: O.titulo,
+        notas: notas.map((n) => ({ id: n.id, tipo: n.tipo || "", bloque: n.bloque || "", tiene_fotos: n.fotos.length > 0, dictado: n.bruto.trim() })),
+      }) }],
+    });
+    // Consumo de la llamada (para calibrar el límite de gasto); queda en la consola y en la visita
+    console.info("IA · modelo", resp.model, "· uso", resp.usage);
+    V.ultimoUsoIA = { modelo: resp.model, entrada: resp.usage?.input_tokens, salida: resp.usage?.output_tokens, notas: notas.length, ts: Date.now() };
+    if (resp.stop_reason === "refusal") throw new Error("La IA ha rechazado la petición. Revisa los textos a mano.");
+    if (resp.stop_reason === "max_tokens") throw new Error("Respuesta incompleta (demasiadas notas). Inténtalo de nuevo.");
+    const texto = resp.content.find((b) => b.type === "text")?.text || "";
+    const salida = JSON.parse(texto);
+    let cambiadas = 0;
+    for (const r of salida.notas) {
+      const n = V.notas.find((x) => x.id === r.id);
+      if (!n) continue;
+      n.mejorado = r.texto.trim();
+      if (!n.tipo) n.tipo = r.tipo;                                        // lo que eligió el técnico manda
+      if (n.tipo === "asunto" && !n.bloque && r.bloque !== "ninguno") n.bloque = r.bloque;
+      if (n.fotos.length && !n.pie) n.pie = r.pie.trim();
+      cambiadas++;
+    }
+    await dbPut("visitas", V);
+    toast(`${cambiadas} nota${cambiadas === 1 ? "" : "s"} redactada${cambiadas === 1 ? "" : "s"}. Revísalas.`);
+    await vRevision(V.id);
+  } catch (e) {
+    console.error(e);
+    const msg = e instanceof Anthropic.AuthenticationError ? "Clave de IA no válida: revísala en Ajustes."
+      : e instanceof Anthropic.PermissionDeniedError ? "La clave no tiene permiso para este modelo."
+      : e instanceof Anthropic.RateLimitError ? "Límite de uso alcanzado. Espera un minuto o revisa el límite de gasto."
+      : e instanceof Anthropic.APIConnectionError ? "Sin conexión con la IA. Revisa la cobertura."
+      : e instanceof SyntaxError ? "La respuesta de la IA no se pudo leer. Inténtalo de nuevo."
+      : e.message || "Error de la IA.";
+    toast(msg, 5000);
+    btn.disabled = false; btn.textContent = "✨ Mejorar redacción con IA";
+  }
+}
+
+/* ---------- Generación del .docx ---------- */
+let ultimoActa = null; // { visita, blob, nombre } para «Compartir» (Guardar en Archivos en iPhone)
+function comprobarAntesDeGenerar() {
+  const errores = [];
+  V.notas.forEach((n, i) => {
+    if (!n.bruto.trim() && !n.mejorado.trim()) errores.push(`Nota ${i + 1}: está vacía (bórrala o escríbela).`);
+    else if (!n.tipo) errores.push(`Nota ${i + 1}: falta el tipo.`);
+    else if (n.tipo === "asunto" && !n.bloque) errores.push(`Nota ${i + 1}: falta el bloque.`);
+    if (n.fotos.length && n.tipo && n.tipo !== "asunto") errores.push(`Nota ${i + 1}: tiene fotos pero no es un asunto del punto 2 (sus fotos no saldrían en el anexo).`);
+  });
+  if (!V.notas.some((n) => n.tipo === "asunto")) errores.push("El acta no tiene ningún asunto en el punto 2.");
+  return errores;
+}
+async function construirActa(v, o) {
+  const fotos = {};
+  for (const n of v.notas) for (const fid of n.fotos) {
+    const f = await dbGet("fotos", fid);
+    if (f) fotos[fid] = { datos: new Uint8Array(await f.blob.arrayBuffer()), ancho: f.ancho, alto: f.alto,
+      pie: (n.pie || textoNota(n).slice(0, 110)).trim().replace(/\.$/, "") + "." };
+  }
+  return {
+    obra: o, fecha: fmtFecha(v.fecha), asistentes: v.asistentes,
+    estado: v.notas.filter((n) => n.tipo === "estado").map(textoNota).filter(Boolean),
+    bloques: BLOQUES.map((b) => ({ nombre: b.nombre, intro: b.intro,
+      items: v.notas.filter((n) => n.tipo === "asunto" && n.bloque === b.id && textoNota(n)).map((n) => ({ texto: textoNota(n), fotos: n.fotos })) })),
+    pendientes: [...v.heredados.filter((h) => h.abierto).map((h) => h.texto), ...v.notas.filter((n) => n.tipo === "pendiente").map(textoNota).filter(Boolean)],
+    fotos,
+  };
+}
+/** Genera el .docx de una visita (lo usan «Generar» y la sincronización de pendientes). */
+async function crearActaDocx(v, o) {
+  const plantilla = await (await fetch("acta_plantilla.docx")).arrayBuffer();
+  const bytes = generarActa(plantilla, await construirActa(v, o));
+  const nombre = `ACTA_VISITA_${o.titulo.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40)}_${fmtFecha(v.fecha).replace(/\//g, "-")}.docx`;
+  return { blob: new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }), nombre };
+}
+async function generar(btn) {
+  const errores = comprobarAntesDeGenerar();
+  if (errores.length) {
+    $("#avisoGen").innerHTML = `<div class="alert alert-danger"><b>Antes de generar:</b><br>${errores.map(esc).join("<br>")}</div>`;
+    $("#avisoGen").scrollIntoView({ block: "center" });
+    return;
+  }
+  btn.disabled = true; btn.textContent = "Generando…";
+  try {
+    const { blob, nombre } = await crearActaDocx(V, O);
+    ultimoActa = { visita: V.id, blob, nombre };
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nombre; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    V.estado = "generada"; await dbPut("visitas", V);
+    // Subida a Drive: carpeta de la visita con fotos, notas.json y el acta. Si no se puede, queda pendiente.
+    if (driveConectado() && navigator.onLine) {
+      try { await subirVisita(V, O, { blob, nombre }, (m) => (btn.textContent = m)); toast("Acta generada y guardada en Drive ✓", 4000); }
+      catch (e) { console.error(e); toast("Acta generada. No se pudo subir a Drive: " + mensajeDrive(e) + " (queda pendiente)", 6000); }
+    } else toast("Acta generada. Queda pendiente de subir a Drive.", 4000);
+    await vRevision(V.id);
+  } catch (e) {
+    console.error(e); toast("No se pudo generar el acta: " + e.message, 5000);
+    btn.disabled = false; btn.textContent = "Generar acta .docx";
+  }
+}
+async function compartirUltima() {
+  if (!ultimoActa) return;
+  const file = new File([ultimoActa.blob], ultimoActa.nombre, { type: ultimoActa.blob.type });
+  try { await navigator.share({ files: [file], title: ultimoActa.nombre }); } catch (e) { if (e.name !== "AbortError") toast("No se pudo compartir."); }
+}
+
+/* =====================================================================================================
+   AJUSTES (por dispositivo)
+   ===================================================================================================== */
+function vAjustes() {
+  const aj = ajustes();
+  barra("Ajustes", "Solo en este dispositivo", "#/");
+  app.innerHTML = `
+    <form id="fAj">
+      <label class="campo">Tu nombre (autor de las visitas)<input name="autor" value="${esc(aj.autor || "")}" placeholder="Nombre y apellido" autocomplete="name"></label>
+      <label class="campo">Clave de IA (Anthropic)<input name="apiKey" type="password" value="${esc(aj.apiKey || "")}" placeholder="sk-ant-…" autocomplete="off" spellcheck="false"></label>
+      <div class="meta" style="margin:-6px 0 12px">Se guarda solo en este teléfono y solo se envía a api.anthropic.com.</div>
+      <label class="campo">Modelo de IA<input name="modelo" value="${esc(aj.modelo || MODELO_DEFECTO)}" autocomplete="off" spellcheck="false"></label>
+      <h2>Google Drive</h2>
+      <label class="campo">ID de cliente de Google (OAuth)<input name="googleClientId" value="${esc(aj.googleClientId || "")}" placeholder="…apps.googleusercontent.com" autocomplete="off" spellcheck="false"></label>
+      <label class="campo">Carpeta raíz en Drive (ID)<input name="driveRaiz" value="${esc(aj.driveRaiz || DRIVE_RAIZ_DEFECTO)}" autocomplete="off" spellcheck="false"></label>
+      <div class="meta" style="margin:-6px 0 12px">Por defecto, la carpeta compartida del estudio. Dentro se crea «${CARPETA_ACTAS}».</div>
+      <button class="btn primario ancho" type="submit">Guardar</button>
+    </form>
+    ${aj.googleClientId ? `<p></p><div class="fila"><span class="crece meta">${driveConectado() ? "☁︎ Drive conectado en este dispositivo" : "Drive sin conectar"}</span>
+      ${driveConectado() ? `<button class="btn mini" data-acc="desconectarDrive">Desconectar</button>` : `<button class="btn mini" data-acc="conectarDrive">Conectar</button>`}</div>` : ""}`;
+  $("#fAj").onsubmit = (e) => {
+    e.preventDefault();
+    const nuevo = {}; new FormData(e.target).forEach((v, k) => (nuevo[k] = String(v).trim()));
+    if (nuevo.driveRaiz !== (aj.driveRaiz || DRIVE_RAIZ_DEFECTO)) idActas = null; // cambió la raíz: volver a buscar «ACTAS DE OBRA»
+    toast(guardarAjustes(nuevo) ? "Ajustes guardados." : "No se pudieron guardar (¿modo privado?).");
+    location.hash = "#/";
+  };
+}
+
+/* ---------- Arranque ---------- */
+(async () => {
+  try { db = await abrirDB(); } catch (e) { app.innerHTML = `<div class="alert alert-danger">No se puede abrir el almacenamiento local: ${esc(e.message)}</div>`; return; }
+  navigator.storage?.persist?.(); // pide a iOS que no borre los datos locales
+  // Funcionar sin cobertura (solo en https o localhost)
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch((e) => console.warn("Sin modo offline:", e));
+  render();
+})();
+</script>
+</body>
+</html>
