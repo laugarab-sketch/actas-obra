@@ -455,11 +455,20 @@ async function vObras() {
   }
 }
 
+/** La sesión de Google dura 1 h. Si ha caducado, abre la ventana de Google para renovarla
+ *  (normalmente basta un toque: Google recuerda la cuenta). Debe llamarse SIN await previo dentro del toque. */
+function renovarSesionSiHaceFalta() {
+  if (!ajustes().googleClientId || driveConectado() || !navigator.onLine) return Promise.resolve();
+  return conectarDrive().catch((e) => toast(e.message, 4000));
+}
+
 /** Sincronización manual: sube lo pendiente y baja lo de los demás. */
 async function sincronizar(btn) {
   if (!navigator.onLine) return toast("Sin conexión.");
+  const sesion = renovarSesionSiHaceFalta();
   btn.disabled = true;
   try {
+    await sesion;
     const subidas = await subirPendientes((m) => (btn.textContent = m));
     ultimaBajada = 0;
     const bajadas = await bajarDeDrive();
@@ -528,6 +537,8 @@ async function vObra(id) {
         : `<a class="tarjeta" href="#/visita/${esc(v.id)}">${cuerpo}</a>`;
     }).join("") : `<div class="vacio">Sin visitas todavía.</div>`);
   $("#bNueva").onclick = async (e) => {
+    // El autor es lo único que distingue a dos técnicos que comparten cuenta de Google: obligatorio
+    if (!(ajustes().autor || "").trim()) { toast("Antes de crear una visita, pon tu nombre en Ajustes.", 4000); return (location.hash = "#/ajustes"); }
     // Antes de crear: traer de Drive la última visita de los demás (pendientes heredados y número correcto)
     if (driveConectado() && navigator.onLine) {
       e.target.disabled = true; e.target.textContent = "Comprobando Drive…";
@@ -885,6 +896,7 @@ async function generar(btn) {
     $("#avisoGen").scrollIntoView({ block: "center" });
     return;
   }
+  const sesion = renovarSesionSiHaceFalta(); // dentro del toque: si la sesión caducó, Google se abre ya
   btn.disabled = true; btn.textContent = "Generando…";
   try {
     const { blob, nombre } = await crearActaDocx(V, O);
@@ -893,6 +905,7 @@ async function generar(btn) {
     setTimeout(() => URL.revokeObjectURL(a.href), 4000);
     V.estado = "generada"; await dbPut("visitas", V);
     // Subida a Drive: carpeta de la visita con fotos, notas.json y el acta. Si no se puede, queda pendiente.
+    await sesion;
     if (driveConectado() && navigator.onLine) {
       try { await subirVisita(V, O, { blob, nombre }, (m) => (btn.textContent = m)); toast("Acta generada y guardada en Drive ✓", 4000); }
       catch (e) { console.error(e); toast("Acta generada. No se pudo subir a Drive: " + mensajeDrive(e) + " (queda pendiente)", 6000); }

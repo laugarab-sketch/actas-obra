@@ -5,7 +5,7 @@
  * - Nunca intercepta Google ni Anthropic (otras direcciones): pasan directas a la red.
  * Al publicar una versión nueva, subir VERSION para que los móviles descarten la caché antigua.
  */
-const VERSION = "actas-obra-v1";
+const VERSION = "actas-obra-v2";
 const ARCHIVOS = [
   "./", "./index.html", "./generar_acta.js", "./acta_plantilla.docx", "./manifest.json",
   "./vendor/pizzip.min.js", "./vendor/docxtemplater.min.js", "./vendor/anthropic.js",
